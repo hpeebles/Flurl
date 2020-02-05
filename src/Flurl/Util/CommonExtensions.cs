@@ -73,19 +73,9 @@ namespace Flurl.Util
 		}
 
 		private static IEnumerable<KeyValuePair<string, object>> ObjectToKV(object obj) {
-#if NETSTANDARD1_0
-			return from prop in obj.GetType().GetRuntimeProperties()
-				let getter = prop.GetMethod
-				where getter?.IsPublic == true
-				let val = getter.Invoke(obj, null)
-				select new KeyValuePair<string, object>(prop.Name, val);
-#else
-			return from prop in obj.GetType().GetProperties()
-				let getter = prop.GetGetMethod(false)
-				where getter != null
-				let val = getter.Invoke(obj, null)
-				select new KeyValuePair<string, object>(prop.Name, val);
-#endif
+			return from tuple in ReflectionUtils.GetAllPropertyGetterDelegates(obj.GetType())
+				let val = tuple.GetterDelegate(obj)
+				select new KeyValuePair<string, object>(tuple.PropertyName, val);
 		}
 
 		private static IEnumerable<KeyValuePair<string, object>> CollectionToKV(IEnumerable col) {
@@ -98,17 +88,10 @@ namespace Flurl.Util
 				object val;
 
 				var type = item.GetType();
-#if NETSTANDARD1_0
-				var keyProp = type.GetRuntimeProperty("Key") ?? type.GetRuntimeProperty("key") ?? type.GetRuntimeProperty("Name") ?? type.GetRuntimeProperty("name");
-				var valProp = type.GetRuntimeProperty("Value") ?? type.GetRuntimeProperty("value");
-#else
-				var keyProp = type.GetProperty("Key") ?? type.GetProperty("key") ?? type.GetProperty("Name") ?? type.GetProperty("name");
-				var valProp = type.GetProperty("Value") ?? type.GetProperty("value");
-#endif
 
-				if (keyProp != null && valProp != null) {
-					key = keyProp.GetValue(item, null)?.ToInvariantString();
-					val = valProp.GetValue(item, null);
+				if (ReflectionUtils.TryGetKeyAndValueGetterDelegates(type, out var keyGetterDelegate, out var valueGetterDelegate)) {
+					key = keyGetterDelegate(item)?.ToInvariantString();
+					val = valueGetterDelegate(item);
 				}
 				else {
 					key = item.ToInvariantString();

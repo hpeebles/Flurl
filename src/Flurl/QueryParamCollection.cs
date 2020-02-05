@@ -83,24 +83,47 @@ namespace Flurl
 			// example: x has values at positions 2 and 4 in the query string, then we set x to
 			// an array of 4 values. We want to replace the values at positions 2 and 4 with the
 			// first 2 values of the new array, then append the remaining 2 values to the end.
-			var parameters = this.Where(p => p.Name == name).ToArray();
+			var existingParametersWithSameName = GetExistingParametersWithSameName();
 			var values = (!(value is string) && value is IEnumerable en) ? en.Cast<object>().ToArray() : new[] { value };
 
 			for (int i = 0;; i++) {
-				if (i < parameters.Length && i < values.Length) {
-					if (values[i] is QueryParameter qp)
-						this[IndexOf(parameters[i])] = qp;
-					else
-						parameters[i].Value = values[i];
+				if (existingParametersWithSameName != null) {
+					if (i < existingParametersWithSameName.Count && i < values.Length) {
+						if (values[i] is QueryParameter qp)
+							this[IndexOf(existingParametersWithSameName[i])] = qp;
+						else
+							existingParametersWithSameName[i].Value = values[i];
+						continue;
+					}
+
+					if (i < existingParametersWithSameName.Count) {
+						Remove(existingParametersWithSameName[i]);
+						continue;
+					}
 				}
-				else if (i < parameters.Length)
-					Remove(parameters[i]);
-				else if (i < values.Length) {
+				if (i < values.Length) {
 					var qp = values[i] as QueryParameter ?? new QueryParameter(name, values[i], isEncoded);
 					Add(qp);
 				}
 				else
 					break;
+			}
+
+			List<QueryParameter> GetExistingParametersWithSameName()
+			{
+				List<QueryParameter> parameters = null;
+				foreach (var parameter in this)
+				{
+					if (parameter.Name != name)
+						continue;
+
+					if (parameters is null)
+						parameters = new List<QueryParameter>();
+
+					parameters.Add(parameter);
+				}
+
+				return parameters;
 			}
 		}
 

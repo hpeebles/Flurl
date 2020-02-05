@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net40;netstandard1.0;netstandard1.3;netstandard2.0;</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;</TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netstandard1.0;netstandard1.3;netstandard2.0;</TargetFrameworks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>Flurl</PackageId>
@@ -17,6 +17,7 @@
     <PackageTags>fluent url uri querystring builder</PackageTags>
     <PackageReleaseNotes>https://github.com/tmenier/Flurl/releases</PackageReleaseNotes>
 	  <IncludeProjectPriFile>false</IncludeProjectPriFile>
+	  <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -39,7 +40,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\icon.png" Pack="true" PackagePath="\"/>
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
